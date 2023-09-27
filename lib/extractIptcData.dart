@@ -88,7 +88,7 @@ Future<Map<String, dynamic>> extractIptcData(String assetPath) async {
 
         String tagName = iptcTags[tag] ?? tag.toString();
         if (iptcTags.containsKey(tag)) {
-          String? tagName = iptcTags[tag];
+          tagName = iptcTags[tag] ?? tagName;
           print("Tag: $tagName, Length: $length");
         }
 
@@ -100,7 +100,7 @@ Future<Map<String, dynamic>> extractIptcData(String assetPath) async {
         final dataBytes = byteData.buffer.asUint8List(i + 5, length);
         final dataString = String.fromCharCodes(dataBytes);
 
-        print("Data String: $dataString");
+        print("Tag: $tagName, Data: $dataString");
         iptcData[tagName] = dataString;
 
         i += 4 + length;

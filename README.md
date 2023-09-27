@@ -1,16 +1,11 @@
-# iptc_editor
+# IPTC Metadata Extractor
 
-A new Flutter project.
+This project aims to extract IPTC metadata from images. IPTC metadata includes important details like location, caption, and photographer. It's written in Dart and is intended to be used in Flutter mobile applications.
 
-## Getting Started
+## Contributions Welcome!
 
-This project is a starting point for a Flutter application.
+I'm still working on improving this project and would really appreciate any help. Feel free to submit pull requests or open issues to discuss enhancements.
 
-A few resources to get you started if this is your first Flutter project:
+Thanks xoxo
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+#flutterdev #flutter #iptc
