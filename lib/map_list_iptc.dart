@@ -202,6 +202,4 @@ Map<int, String> iptcTags = {
   0x027d: "Rasterized Caption",
   0x0287: "Language Identifier",
 
-  //neu
-  0x010E: "Image Description",
 };

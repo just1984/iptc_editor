@@ -1,20 +1,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'extractIptcData.dart';
-import 'testing_imagepackage.dart';
+import 'ex_IPTC.dart';
+import 'ex_EXIF.dart';
+import 'ex_XML.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-          appBar: AppBar(title: const Text('IPTC Extractor')),
+          appBar: AppBar(title: const Text('Metadata Extractor')),
           body: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -31,12 +32,21 @@ class MyApp extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Center(  // Add this line
+              Center(
                 child: ElevatedButton(
                   onPressed: () async {
-                    await extractExifData('assets/images/Test_1.jpg');
+                    await extractExifData('assets/images/Test_3.jpg');
                   },
                   child: const Text('Extract EXIF Data'),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await extractXmlData('assets/images/Test_3.jpg');
+                  },
+                  child: const Text('Extract XML Data'),
                 ),
               ),
             ],
