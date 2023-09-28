@@ -1,113 +1,144 @@
 import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+
+Map<int, String> iptcTags = {
+  0x0100: "TAG_ENVELOPE_RECORD_VERSION",
+  0x0105: "TAG_DESTINATION",
+  0x0114: "TAG_FILE_FORMAT",
+  0x0116: "TAG_FILE_VERSION",
+  0x011E: "TAG_SERVICE_ID",
+  0x0128: "TAG_ENVELOPE_NUMBER",
+  0x0132: "TAG_PRODUCT_ID",
+  0x013C: "TAG_ENVELOPE_PRIORITY",
+  0x0146: "TAG_DATE_SENT",
+  0x0150: "TAG_TIME_SENT",
+  0x015A: "TAG_CODED_CHARACTER_SET",
+  0x0164: "TAG_UNIQUE_OBJECT_NAME",
+  0x0178: "TAG_ARM_IDENTIFIER",
+  0x017A: "TAG_ARM_VERSION",
+  0x0200: "TAG_APPLICATION_RECORD_VERSION",
+  0x0203: "TAG_OBJECT_TYPE_REFERENCE",
+  0x0204: "TAG_OBJECT_ATTRIBUTE_REFERENCE",
+  0x0205: "TAG_OBJECT_NAME",
+  0x0207: "TAG_EDIT_STATUS",
+  0x0208: "TAG_EDITORIAL_UPDATE",
+  0x020A: "TAG_URGENCY",
+  0x020C: "TAG_SUBJECT_REFERENCE",
+  0x020F: "TAG_CATEGORY",
+  0x0214: "TAG_SUPPLEMENTAL_CATEGORIES",
+  0x0216: "TAG_FIXTURE_ID",
+  0x0219: "TAG_KEYWORDS",
+  0x021A: "TAG_CONTENT_LOCATION_CODE",
+  0x021B: "TAG_CONTENT_LOCATION_NAME",
+  0x021E: "TAG_RELEASE_DATE",
+  0x0223: "TAG_RELEASE_TIME",
+  0x0225: "TAG_EXPIRATION_DATE",
+  0x0226: "TAG_EXPIRATION_TIME",
+  0x0228: "TAG_SPECIAL_INSTRUCTIONS",
+  0x022A: "TAG_ACTION_ADVISED",
+  0x022D: "TAG_REFERENCE_SERVICE",
+  0x022F: "TAG_REFERENCE_DATE",
+  0x0232: "TAG_REFERENCE_NUMBER",
+  0x0237: "TAG_DATE_CREATED",
+  0x023C: "TAG_TIME_CREATED",
+  0x023E: "TAG_DIGITAL_DATE_CREATED",
+  0x023F: "TAG_DIGITAL_TIME_CREATED",
+  0x0241: "TAG_ORIGINATING_PROGRAM",
+  0x0246: "TAG_PROGRAM_VERSION",
+  0x024B: "TAG_OBJECT_CYCLE",
+  0x0250: "TAG_BY_LINE",
+  0x0255: "TAG_BY_LINE_TITLE",
+  0x025A: "TAG_CITY",
+  0x025C: "TAG_SUB_LOCATION",
+  0x025F: "TAG_PROVINCE_OR_STATE",
+  0x0264: "TAG_COUNTRY_OR_PRIMARY_LOCATION_CODE",
+  0x0265: "TAG_COUNTRY_OR_PRIMARY_LOCATION_NAME",
+  0x0267: "TAG_ORIGINAL_TRANSMISSION_REFERENCE",
+  0x0269: "TAG_HEADLINE",
+  0x026E: "TAG_CREDIT",
+  0x0273: "TAG_SOURCE",
+  0x0274: "TAG_COPYRIGHT_NOTICE",
+  0x0276: "TAG_CONTACT",
+  0x0278: "TAG_CAPTION",
+  0x0279: "TAG_LOCAL_CAPTION",
+  0x027A: "TAG_CAPTION_WRITER",
+  0x027D: "TAG_RASTERIZED_CAPTION",
+  0x0282: "TAG_IMAGE_TYPE",
+  0x0283: "TAG_IMAGE_ORIENTATION",
+  0x0287: "TAG_LANGUAGE_IDENTIFIER",
+  0x0296: "TAG_AUDIO_TYPE",
+  0x0297: "TAG_AUDIO_SAMPLING_RATE",
+  0x0298: "TAG_AUDIO_SAMPLING_RESOLUTION",
+  0x0299: "TAG_AUDIO_DURATION",
+  0x029A: "TAG_AUDIO_OUTCUE",
+  0x02B8: "TAG_JOB_ID",
+  0x02B9: "TAG_MASTER_DOCUMENT_ID",
+  0x02BA: "TAG_SHORT_DOCUMENT_ID",
+  0x02BB: "TAG_UNIQUE_DOCUMENT_ID",
+  0x02BC: "TAG_OWNER_ID",
+  0x02C8: "TAG_OBJECT_PREVIEW_FILE_FORMAT",
+  0x02C9: "TAG_OBJECT_PREVIEW_FILE_FORMAT_VERSION",
+  0x02CA: "TAG_OBJECT_PREVIEW_DATA",
+};
+
+Future<ByteData> loadImageData(String assetPath) async {
+  try {
+    return await rootBundle.load(assetPath);
+  } on FlutterError catch (e) {
+    print('Error loading image data: $e');
+    rethrow;
+  }
+}
+
+String extractTagData(ByteData byteData, int index, int length) {
+  final dataBytes = byteData.buffer.asUint8List(index + 5, length);
+
+  bool isText = dataBytes.every((byte) => byte >= 32 && byte <= 126);
+
+  if (isText) {
+    return String.fromCharCodes(dataBytes);
+  } else {
+    return dataBytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join(' ');
+  }
+}
 
 Future<Map<String, dynamic>> extractIptcData(String assetPath) async {
   Map<String, dynamic> iptcData = {};
 
-  Map<int, String> iptcTags = {
-    0x0150: "ApplicationRecordVersion",
-    0x005A: "By-line",
-    0x0069: "Caption",
-    0x0050: "By-line Title",
-    0x0074: "Object Name",
-    0x0037: "Image Headline",
-    0x000F: "Category",
-    0x0019: "Supplemental Categories",
-    0x0028: "Keywords",
-    0x006E: "Image Orientation",
-    0x0058: "City",
-    0x0060: "Province/State",
-    0x0063: "Country/Primary Location Name",
-    0x0064: "Country/Primary Location Code",
-    0x0001: "MakerNoteVersion",
-    0x0002: "ISO",
-    0x0003: "ColorMode",
-    0x0004: "Quality",
-    0x0005: "WhiteBalance",
-    0x0006: "Sharpness",
-    0x0007: "FocusMode",
-    0x0008: "FlashSetting",
-    0x0009: "FlashType",
-    0x000b: "WhiteBalanceFineTune",
-    0x000c: "WB_RBLevels",
-    0x000d: "ProgramShift",
-    0x000e: "ExposureDifference",
-    0x000f: "ISOSelection",
-    0x0010: "DataDump",
-    0x0011: "PreviewIFD",
-    0x0012: "FlashExposureComp",
-    0x0013: "ISOSetting",
-    0x0014: "ColorBalanceA_NRWData",
-    0x0016: "ImageBoundary",
-    0x0017: "ExternalFlashExposureComp",
-    0x0018: "FlashExposureBracketValue",
-    0x0019: "ExposureBracketValue",
-    0x001a: "ImageProcessing",
-    0x001b: "CropHiSpeed",
-    0x001c: "ExposureTuning",
-    0x001d: "SerialNumber",
-    0x001e: "ColorSpace",
-    0x001f: "VRInfo",
-    0x0020: "ImageAuthentication",
-    0x0021: "FaceDetect",
-    0x0022: "ActiveD-Lighting",
-    0x0023: "PictureControlData",
-    0x0024: "WorldTime",
-    0x0025: "ISOInfo",
-    0x002a: "VignetteControl",
-    0x002b: "DistortInfo",
-    0x002c: "UnknownInfo",
-    0x0032: "UnknownInfo2",
-    0x0034: "ShutterMode",
-    0x0035: "HDRInfo",
-    0x0037: "MechanicalShutterCount",
-    0x0039: "LocationInfo",
-    0x003d: "BlackLevel",
-    0x003e: "ImageSizeRAW",
-    0x003f: "WhiteBalanceFineTune",
-    0x0044: "JPGCompression",
-    0x0045: "CropArea",
-    0x004e: "NikonSettings",
-    0x004f: "ColorTemperatureAuto",
-    0x0080: "ImageAdjustment",
-    0x0081: "ToneComp",
-    0x0082: "AuxiliaryLens",
-    0x0083: "LensType",
-  };
-
-
+  final ByteData byteData;
   try {
-    final ByteData data = await rootBundle.load(assetPath);
-    final ByteBuffer buffer = data.buffer;
-    final ByteData byteData = ByteData.view(buffer);
-
-    for (int i = 0; i < byteData.lengthInBytes - 4; i++) {
-      if (byteData.getUint8(i) == 0x1C) {
-        final tag = byteData.getUint16(i + 1, Endian.big);
-        final length = byteData.getUint16(i + 3, Endian.big);
-
-        String tagName = iptcTags[tag] ?? tag.toString();
-        if (iptcTags.containsKey(tag)) {
-          tagName = iptcTags[tag] ?? tagName;
-          print("Tag: $tagName, Length: $length");
-        }
-
-        if (i + 5 + length > byteData.lengthInBytes) {
-          print("Skipping invalid range.");
-          continue;
-        }
-
-        final dataBytes = byteData.buffer.asUint8List(i + 5, length);
-        final dataString = String.fromCharCodes(dataBytes);
-
-        print("Tag: $tagName, Data: $dataString");
-        iptcData[tagName] = dataString;
-
-        i += 4 + length;
-      }
-    }
+    byteData = await loadImageData(assetPath);
   } catch (e) {
-    print("Error reading IPTC data: $e");
+    return {};
+  }
+
+  int i = 0;
+  while (i < byteData.lengthInBytes - 4) {
+    if (byteData.getUint8(i) == 0x1C) {
+      final tag = byteData.getUint16(i + 1, Endian.big);
+      final length = byteData.getUint16(i + 3, Endian.big);
+
+      String tagName = iptcTags[tag] ?? tag.toString();
+      String hexTag = "(0x${tag.toRadixString(16).toUpperCase().padLeft(4, '0')})";
+
+      if (iptcTags.containsKey(tag)) {
+       // print("Tag: $hexTag $tagName, Length: $length");
+      }
+
+      if (i + 5 + length > byteData.lengthInBytes) {
+        i++;
+        continue;
+      }
+
+      final dataString = extractTagData(byteData, i, length);
+
+      print("Tag: $hexTag $tagName, Data: $dataString");
+      iptcData[tagName] = dataString;
+      i += 4 + length;
+    } else {
+      i++;
+    }
   }
 
   return iptcData;
